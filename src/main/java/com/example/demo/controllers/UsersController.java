@@ -29,7 +29,7 @@ public class UsersController {
             json = new UserJson(user.getId(), user.getUsername(), user.getEmail(),
                     user.getPassword(), user.getPhoneNumber());
         } else {
-            json = new UserJson();
+            json = null;
         }
         return json;
     }
