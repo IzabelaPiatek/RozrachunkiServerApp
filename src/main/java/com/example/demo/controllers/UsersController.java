@@ -12,20 +12,33 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.example.demo.dao.UsersRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
-@RequestMapping("/users")
+@RequestMapping("users")
 public class UsersController {
+    
+    private PasswordEncoder encoder = new BCryptPasswordEncoder();
     
     @Autowired
     private UsersRepository userRepository;
+    
+    public UsersController() {
+    }
+    
+    //public UsersController(PasswordEncoder encoder) {
+    //    this.encoder = encoder;
+    //}
     
     @GetMapping("login/{username}/{password}")
     public UserJson login(@PathVariable String username, @PathVariable("password") String password) {
         UserJson json;
         User user = userRepository.findByUsername(username);
-        if (null != user && user.getPassword() == password) { //TODO dodac warunek logowania
+        if (null != user && user.getPassword().equals(encoder.encode(password))) { //TODO dodac warunek logowania
             json = new UserJson(user.getId(), user.getUsername(), user.getEmail(),
                     user.getPassword(), user.getPhoneNumber());
         } else {
@@ -34,39 +47,55 @@ public class UsersController {
         return json;
     }
     
-    @RequestMapping(value="/save", method=RequestMethod.POST)
-    public UserJson add(@RequestBody User user) {
+    @PostMapping(value="save")
+    public User save(@RequestBody User user) {
         UserJson json = null;
         User foundUser = userRepository.findByUsername(user.getUsername());
-            if (foundUser == null) {
-                    //String password = PasswordGenerator.generatePassword(20);
-                    //User user = new User(theInstructor.getLogin(), encoder.encode(password), "INSTRUCTOR", "");
-                    System.out.println("dodaj użytkownika");
-                    json = new UserJson(user.getId(), user.getUsername(), user.getEmail(), user.getPassword(), user.getPhoneNumber());
-                    userRepository.save(user);
-                    //UserPrincipal principal = new UserPrincipal(user);
-                    //user.setUserId(principal.getId());
-            } else {
-                    //User user = userRepository.findById(theInstructor.getUserId());
-                    //user.setUsername(theInstructor.getLogin());
-            }
-
-            //theInstructor.setDeleted(0);
-            //instructorRepository.save(theInstructor);
-            //theModel.addAttribute("saved", true);
-            //return user == null? null : user.getId();
-            return json;
-    }
-    /*
-    @GetMapping("add/{username}/{password}")
-    public UserJson addUser(@PathVariable String username, @PathVariable("password") String password) {
-        UserJson json;
-        User user = userRepository.findByUsername(username);
-        if (null == user) {
-            json = new UserJson();
+        System.out.println(foundUser);
+        if (foundUser == null) {
+                user.setPassword(encoder.encode(user.getPassword()));
+                userRepository.save(user);
+                json = new UserJson(user.getId(), user.getUsername(), user.getEmail(), user.getPassword(), user.getPhoneNumber());
+                //UserPrincipal principal = new UserPrincipal(user);
+                //user.setUserId(principal.getId());
         } else {
-            json = new UserJson();
+                //User user = userRepository.findById(theInstructor.getUserId());
+                //user.setUsername(theInstructor.getLogin());
+        }
+
+        //theInstructor.setDeleted(0);
+        //instructorRepository.save(theInstructor);
+        //theModel.addAttribute("saved", true);
+        //return user == null? null : user.getId();
+        System.out.println(json.getId());
+        return user;
+    } 
+    
+    @RequestMapping(value = "updateUserData", method = RequestMethod.POST)
+    public int updateUserData(@RequestBody User user) {
+        //User foundUser = userRepository.findById(user.getId());
+        //user.setId(foundUser.getId());
+        //user.setPassword(foundUser.getPassword());
+        userRepository.save(user);
+        return user.getId();
+    }
+    
+    @GetMapping(value = "get/{username}")
+    public UserJson get(@PathVariable String username) {
+        User user = userRepository.findByUsername(username);
+        UserJson json = new UserJson(user.getId(), user.getUsername(), user.getEmail(), user.getPassword(), user.getPhoneNumber());
+        return json;
+    }
+    
+    @RequestMapping(value="changePassword/{username}/{oldPassword}/{password}", method=RequestMethod.POST)
+    public UserJson changePassword(@PathVariable String username, @PathVariable("oldPassword") String oldPassword, @PathVariable("password") String password) {
+        User user = userRepository.findByUsername(username);
+        UserJson json = null;
+        if (user.getPassword().equals(encoder.encode(oldPassword))) {
+            user.setPassword(encoder.encode(password));
+            userRepository.save(user);
+            json = new UserJson(user.getId(), user.getUsername(), user.getEmail(), user.getPassword(), user.getPhoneNumber());
         }
         return json;
-    }*/
+    }
 }
