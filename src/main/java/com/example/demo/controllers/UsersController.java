@@ -17,8 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.example.demo.dao.UsersRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 @RequestMapping("users")
 public class UsersController {
     
@@ -38,7 +39,8 @@ public class UsersController {
     public UserJson login(@PathVariable String username, @PathVariable("password") String password) {
         UserJson json;
         User user = userRepository.findByUsername(username);
-        if (null != user && user.getPassword().equals(encoder.encode(password))) { //TODO dodac warunek logowania
+        //user.setPassword(encoder.encode("emilka"));
+        if (null != user && encoder.matches(password, user.getPassword())) { //TODO dodac warunek logowania
             json = new UserJson(user.getId(), user.getUsername(), user.getEmail(),
                     user.getPassword(), user.getPhoneNumber());
         } else {
@@ -53,7 +55,8 @@ public class UsersController {
         User foundUser = userRepository.findByUsername(user.getUsername());
         System.out.println(foundUser);
         if (foundUser == null) {
-                user.setPassword(encoder.encode(user.getPassword()));
+                String pass = encoder.encode(user.getPassword());
+                user.setPassword(pass);
                 userRepository.save(user);
                 json = new UserJson(user.getId(), user.getUsername(), user.getEmail(), user.getPassword(), user.getPhoneNumber());
                 //UserPrincipal principal = new UserPrincipal(user);
