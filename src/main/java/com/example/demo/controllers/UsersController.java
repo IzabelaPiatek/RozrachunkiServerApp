@@ -1,7 +1,6 @@
 package com.example.demo.controllers;
 
 import com.example.demo.entity.User;
-import com.example.demo.json.UserJson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.demo.dao.UsersRepository;
+import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,69 +36,65 @@ public class UsersController {
     //}
     
     @GetMapping("login/{username}/{password}")
-    public UserJson login(@PathVariable String username, @PathVariable("password") String password) {
-        UserJson json;
+    public User login(@PathVariable String username, @PathVariable("password") String password) {
         User user = userRepository.findByUsername(username);
-        //user.setPassword(encoder.encode("emilka"));
-        if (null != user && encoder.matches(password, user.getPassword())) { //TODO dodac warunek logowania
-            json = new UserJson(user.getId(), user.getUsername(), user.getEmail(),
-                    user.getPassword(), user.getPhoneNumber());
+        if (null != user && encoder.matches(password, user.getPassword())) {
+            return user;
         } else {
-            json = null;
+            return null;
         }
-        return json;
     }
     
     @PostMapping(value="save")
     public User save(@RequestBody User user) {
-        UserJson json = null;
         User foundUser = userRepository.findByUsername(user.getUsername());
-        System.out.println(foundUser);
+        
         if (foundUser == null) {
-                String pass = encoder.encode(user.getPassword());
-                user.setPassword(pass);
-                userRepository.save(user);
-                json = new UserJson(user.getId(), user.getUsername(), user.getEmail(), user.getPassword(), user.getPhoneNumber());
-                //UserPrincipal principal = new UserPrincipal(user);
-                //user.setUserId(principal.getId());
+            String pass = encoder.encode(user.getPassword());
+            user.setPassword(pass);
+            userRepository.save(user);
         } else {
-                //User user = userRepository.findById(theInstructor.getUserId());
-                //user.setUsername(theInstructor.getLogin());
+            user = null;
         }
-
-        //theInstructor.setDeleted(0);
-        //instructorRepository.save(theInstructor);
-        //theModel.addAttribute("saved", true);
-        //return user == null? null : user.getId();
-        System.out.println(json.getId());
         return user;
     } 
     
     @RequestMapping(value = "updateUserData", method = RequestMethod.POST)
     public int updateUserData(@RequestBody User user) {
-        //User foundUser = userRepository.findById(user.getId());
-        //user.setId(foundUser.getId());
-        //user.setPassword(foundUser.getPassword());
+        User userFromDb = null;
+        Optional<User> u = userRepository.findById(user.getId());
+        
+        if (u == null)
+        {
+            userFromDb  = u.get();
+        }
+        if (!userFromDb.getUsername().equals(user.getUsername()))
+        {
+            if (userRepository.findByUsername(user.getUsername()) != null)
+                return -1;
+        }
+        if (!userFromDb.getEmail().equals(user.getEmail()))
+        {
+            if (userRepository.findByEmail(user.getEmail()) != null)
+                return -2;
+        }
         userRepository.save(user);
         return user.getId();
     }
     
     @GetMapping(value = "get/{username}")
-    public UserJson get(@PathVariable String username) {
+    public User get(@PathVariable String username) {
         User user = userRepository.findByUsername(username);
-        UserJson json = new UserJson(user.getId(), user.getUsername(), user.getEmail(), user.getPassword(), user.getPhoneNumber());
-        return json;
+        return user;
     }
     
     @RequestMapping(value="changePassword/{username}/{oldPassword}/{password}", method=RequestMethod.POST)
-    public UserJson changePassword(@PathVariable String username, @PathVariable("oldPassword") String oldPassword, @PathVariable("password") String password) {
+    public User changePassword(@PathVariable String username, @PathVariable("oldPassword") String oldPassword, @PathVariable("password") String password) {
         User user = userRepository.findByUsername(username);
-        UserJson json = null;
         if (user.getPassword().equals(encoder.encode(oldPassword))) {
             user.setPassword(encoder.encode(password));
             userRepository.save(user);
-            json = new UserJson(user.getId(), user.getUsername(), user.getEmail(), user.getPassword(), user.getPhoneNumber());
         }
-        return json;
+        return user;
     }
 }
