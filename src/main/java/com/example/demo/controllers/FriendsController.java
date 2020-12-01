@@ -6,9 +6,11 @@ import com.example.demo.entity.Friendship;
 import com.example.demo.entity.User;
 import java.util.ArrayList;
 import java.util.List;
+import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,5 +40,11 @@ public class FriendsController {
         return friends;
     }
     
-    
+    @Transactional
+    @PostMapping(value = "delete/{idUser}/{idFriend}")
+    public int delete(@PathVariable Integer idUser, @PathVariable Integer idFriend) {
+        
+        friendRepository.deleteByIdUserAndIdFriend(idUser, idFriend);
+        return 1;
+    }
 }

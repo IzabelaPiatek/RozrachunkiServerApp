@@ -64,7 +64,7 @@ public class UsersController {
         User userFromDb = null;
         Optional<User> u = userRepository.findById(user.getId());
         
-        if (u == null)
+        if (u != null)
         {
             userFromDb  = u.get();
         }

@@ -7,5 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface FriendsRepository extends JpaRepository<Friendship, Integer> {
 
     public List<Friendship> findByIdUser(int idUser);
+
+    public void deleteByIdUserAndIdFriend(Integer idUser, Integer idFriend);
     
 }
