@@ -51,6 +51,10 @@ public class UsersController {
         
         if (foundUser == null) {
             String pass = encoder.encode(user.getPassword());
+            if (!user.getPhoneNumber().startsWith("+48"))
+            {
+                user.setPhoneNumber("+48" + user.getPhoneNumber());
+            }
             user.setPassword(pass);
             userRepository.save(user);
         } else {
