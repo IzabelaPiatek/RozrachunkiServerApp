@@ -1,12 +1,14 @@
 package com.example.demo.controllers;
 
+import com.example.demo.dao.BreakdownsRepository;
 import com.example.demo.dao.FriendsRepository;
+import com.example.demo.dao.PaymentsRepository;
 import com.example.demo.dao.UsersRepository;
+import com.example.demo.entity.Breakdown;
 import com.example.demo.entity.Friendship;
+import com.example.demo.entity.Payment;
 import com.example.demo.entity.User;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +28,12 @@ public class FriendsController {
     @Autowired
     private UsersRepository userRepository;
     
+    @Autowired
+    private PaymentsRepository paymentsRepository;
+    
+    @Autowired
+    private BreakdownsRepository breakdownsRepository;
+    
     UsersController usersController = new UsersController();
     
     public FriendsController() {
@@ -39,6 +47,42 @@ public class FriendsController {
             userRepository.findById(friendship.getIdFriend());
             friends.add(userRepository.findById(friendship.getIdFriend()).get());
         }*/
+        return friendships;
+    }
+    
+    @GetMapping(value = "getUserFriendsWhoOweHim/{idUser}")
+    public ArrayList<Friendship> getUserFriendsWhoOweHim(@PathVariable Integer idUser) {
+        ArrayList<Friendship> filtered = new ArrayList<Friendship>();
+        ArrayList<Friendship> friendships = (ArrayList<Friendship>) friendRepository.findByIdUser(idUser);
+        for (Friendship friendship : friendships) {
+            
+            if (friendship.isHasAccount())
+            {
+                ArrayList<Payment> payments = paymentsRepository.findByPaidByAndSettled(idUser, false);
+                
+                for (Payment payment : payments) {
+                    ArrayList<Breakdown> breakdowns = breakdownsRepository.findByIdPaymentAndSettled(payment.getId(), false);
+                }
+                
+                filtered.add(friendship);
+            }
+            //niedokończone ?
+            
+            
+            //userRepository.findById(friendship.getIdFriend());
+            //friends.add(userRepository.findById(friendship.getIdFriend()).get());
+        }
+        return filtered;
+    }
+    
+    @GetMapping(value = "getUserFriendsHeOwes/{idUser}")
+    public ArrayList<Friendship> getUserFriendsHeOwes(@PathVariable Integer idUser) {
+        
+        ArrayList<Friendship> friendships = (ArrayList<Friendship>) friendRepository.findByIdUser(idUser);
+        for (Friendship friendship : friendships) {
+            //userRepository.findById(friendship.getIdFriend());
+            //friends.add(userRepository.findById(friendship.getIdFriend()).get());
+        }
         return friendships;
     }
     
@@ -110,16 +154,22 @@ public class FriendsController {
             }
         }
         
-        Friendship found = friendRepository.findByIdUserAndPhoneNumber(friendship.getIdUser(), friendship.getPhoneNumber());
-        
-        if (found != null) {
-            return null;
+        if (friendship.getPhoneNumber()!= null)
+        {
+            Friendship found = friendRepository.findByIdUserAndPhoneNumber(friendship.getIdUser(), friendship.getPhoneNumber());
+
+            if (found != null) {
+                return null;
+            }
         }
         
-        found = friendRepository.findByIdUserAndEmail(friendship.getIdUser(), friendship.getEmail());
-        
-        if (found != null) {
-            return null;
+        if (friendship.getEmail()!= null)
+        {
+            Friendship found = friendRepository.findByIdUserAndEmail(friendship.getIdUser(), friendship.getEmail());
+
+            if (found != null) {
+                return null;
+            }
         }
 
         friendRepository.save(friendship);
