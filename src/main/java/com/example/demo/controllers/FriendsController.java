@@ -8,7 +8,9 @@ import com.example.demo.entity.Breakdown;
 import com.example.demo.entity.Friendship;
 import com.example.demo.entity.Payment;
 import com.example.demo.entity.User;
+import com.example.demo.json.FriendJson;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,10 +31,10 @@ public class FriendsController {
     private UsersRepository userRepository;
     
     @Autowired
-    private PaymentsRepository paymentsRepository;
+    private BreakdownsRepository breakdownsRepository;
     
     @Autowired
-    private BreakdownsRepository breakdownsRepository;
+    private PaymentsRepository paymentsRepository;
     
     UsersController usersController = new UsersController();
     
@@ -40,50 +42,60 @@ public class FriendsController {
     }
     
     @GetMapping(value = "getUserFriends/{idUser}")
-    public ArrayList<Friendship> getUserFriends(@PathVariable Integer idUser) {
+    public ArrayList<FriendJson> getUserFriends(@PathVariable Integer idUser) {
         
         ArrayList<Friendship> friendships = (ArrayList<Friendship>) friendRepository.findByIdUser(idUser);
-        /*for (Friendship friendship : friendships) {
-            userRepository.findById(friendship.getIdFriend());
-            friends.add(userRepository.findById(friendship.getIdFriend()).get());
-        }*/
-        return friendships;
+        ArrayList<FriendJson> friends = new ArrayList<>();
+        
+        ArrayList<Payment> payments = paymentsRepository.findByPaidByAndSettled(idUser, false);
+        
+        for (Friendship friendship : friendships) {
+            Integer owesYouSum = 0;
+            for (Payment payment: payments) {
+                ArrayList<Breakdown> b = breakdownsRepository.findByIdBorrowerAndIdPayment(friendship.getIdFriend(), payment.getId());
+                for (Breakdown breakdown : b) {
+                    if (breakdown.isSettled() == false) {
+                        owesYouSum += breakdown.getAmount();
+                    }
+                }
+            }
+
+            payments = paymentsRepository.findByPaidByAndSettled(friendship.getIdFriend(), false);
+            Integer youOweSum = 0;
+            for (Payment payment: payments) {
+                ArrayList<Breakdown> b = breakdownsRepository.findByIdBorrowerAndIdPayment(idUser, payment.getId());
+                for (Breakdown breakdown : b) {
+                    if (breakdown.isSettled() == false) {
+                        youOweSum += breakdown.getAmount();
+                    }
+                }
+            }
+            
+            friends.add(new FriendJson(friendship.getId(), friendship.getUsername(), owesYouSum, youOweSum, null));
+            //userRepository.findById(friendship.getIdFriend());
+            //friends.add(userRepository.findById(friendship.getIdFriend()).get());
+        }
+        return friends;
     }
     
     @GetMapping(value = "getUserFriendsWhoOweHim/{idUser}")
-    public ArrayList<Friendship> getUserFriendsWhoOweHim(@PathVariable Integer idUser) {
-        ArrayList<Friendship> filtered = new ArrayList<Friendship>();
-        ArrayList<Friendship> friendships = (ArrayList<Friendship>) friendRepository.findByIdUser(idUser);
-        for (Friendship friendship : friendships) {
-            
-            if (friendship.isHasAccount())
-            {
-                ArrayList<Payment> payments = paymentsRepository.findByPaidByAndSettled(idUser, false);
-                
-                for (Payment payment : payments) {
-                    ArrayList<Breakdown> breakdowns = breakdownsRepository.findByIdPaymentAndSettled(payment.getId(), false);
-                }
-                
-                filtered.add(friendship);
-            }
-            //niedokończone ?
-            
-            
-            //userRepository.findById(friendship.getIdFriend());
-            //friends.add(userRepository.findById(friendship.getIdFriend()).get());
-        }
-        return filtered;
+    public ArrayList<FriendJson> getUserFriendsWhoOweHim(@PathVariable Integer idUser) {
+        
+        ArrayList<FriendJson> friends = new ArrayList<>();
+        
+        friends = getUserFriends(idUser).stream().filter(f -> f.getOwesYou() != 0).collect(Collectors.toCollection(() -> new ArrayList<FriendJson>()));
+
+        return friends;
     }
     
     @GetMapping(value = "getUserFriendsHeOwes/{idUser}")
-    public ArrayList<Friendship> getUserFriendsHeOwes(@PathVariable Integer idUser) {
+    public ArrayList<FriendJson> getUserFriendsHeOwes(@PathVariable Integer idUser) {
         
-        ArrayList<Friendship> friendships = (ArrayList<Friendship>) friendRepository.findByIdUser(idUser);
-        for (Friendship friendship : friendships) {
-            //userRepository.findById(friendship.getIdFriend());
-            //friends.add(userRepository.findById(friendship.getIdFriend()).get());
-        }
-        return friendships;
+        ArrayList<FriendJson> friends = new ArrayList<>();
+        
+        friends = getUserFriends(idUser).stream().filter(f -> f.getYouOwe()!= 0).collect(Collectors.toCollection(() -> new ArrayList<FriendJson>()));
+
+        return friends;
     }
     
     @Transactional
