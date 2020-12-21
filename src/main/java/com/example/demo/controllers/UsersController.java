@@ -47,15 +47,28 @@ public class UsersController {
     
     @PostMapping(value="save")
     public User save(@RequestBody User user) {
-        User foundUser = userRepository.findByUsername(user.getUsername());
+        User foundUser = userRepository.findByUsernameAndHasAccount(user.getUsername(), true);
         
         if (foundUser == null) {
-            String pass = encoder.encode(user.getPassword());
+            
             if (!user.getPhoneNumber().startsWith("+48"))
             {
                 user.setPhoneNumber("+48" + user.getPhoneNumber());
             }
+            
+            User u = userRepository.findByPhoneNumber(user.getPhoneNumber());
+            if (u != null) {
+                user.setId(u.getId());
+            }
+            
+            u = userRepository.findByEmail(user.getEmail());
+            if (u != null) {
+                user.setId(u.getId());
+            }
+            
+            String pass = encoder.encode(user.getPassword());
             user.setPassword(pass);
+            
             userRepository.save(user);
         } else {
             user = null;
@@ -88,7 +101,7 @@ public class UsersController {
     
     @GetMapping(value = "get/{username}")
     public User get(@PathVariable String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndHasAccount(username, true);
         return user;
     }
     

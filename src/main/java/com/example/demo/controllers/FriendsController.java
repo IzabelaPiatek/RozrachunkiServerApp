@@ -10,6 +10,7 @@ import com.example.demo.entity.Payment;
 import com.example.demo.entity.User;
 import com.example.demo.json.FriendJson;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,11 +44,12 @@ public class FriendsController {
     
     @GetMapping(value = "getUserFriends/{idUser}")
     public ArrayList<FriendJson> getUserFriends(@PathVariable Integer idUser) {
-        
-        ArrayList<Friendship> friendships = (ArrayList<Friendship>) friendRepository.findByIdUser(idUser);
         ArrayList<FriendJson> friends = new ArrayList<>();
         
         ArrayList<Payment> payments = paymentsRepository.findByPaidByAndSettled(idUser, false);
+        
+        ArrayList<Friendship> friendships = (ArrayList<Friendship>) friendRepository.findByIdUser(idUser);
+        //pobieraj nie tylko z firendships, ale też wszystkich, z którymi ma jakieś payments lub breakdowns
         
         for (Friendship friendship : friendships) {
             Integer owesYouSum = 0;
@@ -71,9 +73,15 @@ public class FriendsController {
                 }
             }
             
-            friends.add(new FriendJson(friendship.getId(), friendship.getUsername(), owesYouSum, youOweSum, null));
-            //userRepository.findById(friendship.getIdFriend());
-            //friends.add(userRepository.findById(friendship.getIdFriend()).get());
+            Optional<User> user = userRepository.findById(friendship.getIdFriend());
+            
+            if (user.get().getUsername() == null)
+            {
+                user.get().setUsername(user.get().getEmail());
+            }
+            
+            friends.add(new FriendJson(friendship.getId(), user.get().getUsername(), owesYouSum, youOweSum, null));
+
         }
         return friends;
     }
@@ -126,64 +134,53 @@ public class FriendsController {
         //return 0;
     }
     
-    @PostMapping(value="add")
-    public Friendship add(@RequestBody Friendship friendship) {
+    @PostMapping(value="add/{userId}")
+    public Friendship add(@PathVariable Integer userId, @RequestBody User user) {
         
-        if (friendship.getPhoneNumber() != null)
-        {
-            if (!friendship.getPhoneNumber().startsWith("+48"))
-            {
-                friendship.setPhoneNumber("+48" + friendship.getPhoneNumber());
-            }
-        }
+        User u;
+        Friendship friendship = new Friendship(null, userId, null);
         
-        User user = userRepository.findByPhoneNumber(friendship.getPhoneNumber());
-        
-        if (user != null)
-        {
-            friendship.setIdFriend(user.getId());
-            friendship.setHasAccount(true);
-            friendship.setUsername(user.getUsername());
-        }
-        else
-        {
-            user = userRepository.findByEmail(friendship.getEmail());
+        if (user.getUsername() != null && user.isHasAccount() == true)
+        {         
+            u = userRepository.findByUsernameAndHasAccount(user.getUsername(), true);
             
-            if (user != null)
+            if (u != null) {
+                user.setId(u.getId());
+            }
+        } else if (user.getPhoneNumber() != null)
+        {
+            if (!user.getPhoneNumber().startsWith("+48"))
             {
-                friendship.setIdFriend(user.getId());
-                friendship.setHasAccount(true);
-                friendship.setUsername(user.getUsername());
+                user.setPhoneNumber("+48" + user.getPhoneNumber());
             }
-        }
-        
-        if (friendship.getIdFriend() != null)
-        {
-            Friendship found = friendRepository.findByIdUserAndIdFriend(friendship.getIdUser(), friendship.getIdFriend());
             
-            if (found != null) {
-                return null;
+            u = userRepository.findByPhoneNumber(user.getPhoneNumber());
+            
+            if (u != null) {
+                user.setId(u.getId());
+            }
+        } 
+        else if (user.getEmail()!= null)
+        {            
+            u = userRepository.findByEmail(user.getEmail());
+            
+            if (u != null) {
+                user.setId(u.getId());
             }
         }
         
-        if (friendship.getPhoneNumber()!= null)
-        {
-            Friendship found = friendRepository.findByIdUserAndPhoneNumber(friendship.getIdUser(), friendship.getPhoneNumber());
-
-            if (found != null) {
-                return null;
-            }
+        if (user.getId() == null) {
+            userRepository.save(user);
         }
         
-        if (friendship.getEmail()!= null)
-        {
-            Friendship found = friendRepository.findByIdUserAndEmail(friendship.getIdUser(), friendship.getEmail());
+        friendship.setIdFriend(user.getId());
+        
+        Friendship found = friendRepository.findByIdUserAndIdFriend(friendship.getIdUser(), friendship.getIdFriend());
 
-            if (found != null) {
-                return null;
-            }
+        if (found != null) {
+            return null;
         }
-
+        
         friendRepository.save(friendship);
         
         return friendship;
