@@ -18,6 +18,8 @@ public class RozrachunkiServerAppApplication {
     static final String USER = "admin";
     static final String PASS = "admin";
 
+    public static Connection connection = null;
+
     public static void main(String[] args) {
 
         Connection connection = null;

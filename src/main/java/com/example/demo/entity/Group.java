@@ -29,7 +29,7 @@ public class Group {
     private boolean settled;
     
     @Column(name = "image")
-    @Lob()
+    @Lob
     private Blob image = null;
 
     public Group(Integer id, String name, Integer type, boolean settled, Blob image) {
