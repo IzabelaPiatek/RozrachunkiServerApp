@@ -28,7 +28,7 @@ public class Group {
     @Column(name = "settled")
     private boolean settled;
     
-    @Column(name = "image")
+    @Column(name = "image", columnDefinition = "MEDIUMBLOB")
     @Lob
     private Blob image = null;
 

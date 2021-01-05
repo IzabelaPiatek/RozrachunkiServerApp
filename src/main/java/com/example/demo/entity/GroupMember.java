@@ -10,6 +10,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "groupmembers")
 public class GroupMember {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_groupmember")
@@ -20,14 +21,14 @@ public class GroupMember {
     
     @Column(name = "id_group")
     private Integer idGroup;
-    
-    public void GroupMember(Integer id, Integer idUser, Integer idGroup) {
+
+    public GroupMember(Integer id, Integer idUser, Integer idGroup) {
         this.id = id;
         this.idUser = idUser;
         this.idGroup = idGroup;
     }
     
-    public void GroupMember() {}
+    public GroupMember() {}
 
     public Integer getId() {
         return id;

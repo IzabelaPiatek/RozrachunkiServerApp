@@ -1,7 +1,5 @@
 package com.example.demo.json;
 
-import javax.persistence.*;
-
 public class GroupJson {
 
     private Integer id;
@@ -20,8 +18,7 @@ public class GroupJson {
 
     public GroupJson() {}
 
-    public void Group() {
-    }
+    public void Group() { }
 
     public Integer getId() {
         return id;

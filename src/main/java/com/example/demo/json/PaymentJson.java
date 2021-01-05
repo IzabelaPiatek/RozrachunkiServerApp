@@ -1,50 +1,41 @@
-package com.example.demo.entity;
+package com.example.demo.json;
 
+import com.example.demo.entity.Breakdown;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import java.sql.Blob;
-import java.util.Date;
 import javax.persistence.*;
+import java.sql.Blob;
+import java.util.ArrayList;
+import java.util.Date;
 
-@Entity
-@Table(name = "payments")
-public class Payment {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_payment")
+public class PaymentJson {
+
     private Integer id;
-    
-    @Column(name = "id_group")
     private Integer idGroup;
-    
-    @Column(name = "paid_by")
     private Integer paidBy;
-    
-    @Column(name = "amount")
     private Integer amount;
-    
-    @Column(name = "description")
     private String description;
-    
-    @Column(name = "date")
     private Date date;
-
-    @Column(name = "image", columnDefinition = "MEDIUMBLOB")
-    @Lob
-    private Blob image = null;
-    
-    @Column(name = "note")
+    private byte[] image = null;
     private String note;
-    
-    @Column(name = "settled")
     private boolean settled = false;
-    
-    @Column(name = "payment_option")
     private Integer payment_option;
+    private ArrayList<Breakdown> breakdowns;
 
-    public Payment(Integer id, Integer idGroup, Integer paidBy, Integer amount, String description, Date date, Blob image, String note, boolean settled, Integer payment_option) {
+    public enum paymentOptions {
+        PO_RÓWNO(0),
+        PO_RÓWNO_WYBRANI(1),
+        WG_KWOT(2),
+        WG_KWOT_WYBRANI(3);
+
+        private final int value;
+
+        private paymentOptions(int value) {
+            this.value = value;
+        }
+    }
+
+    public PaymentJson(Integer id, Integer idGroup, Integer paidBy, Integer amount, String description, Date date, byte[] image, String note, boolean settled, Integer payment_option, ArrayList<Breakdown> breakdowns) {
         this.id = id;
         this.idGroup = idGroup;
         this.paidBy = paidBy;
@@ -55,9 +46,10 @@ public class Payment {
         this.note = note;
         this.settled = settled;
         this.payment_option = payment_option;
+        this.breakdowns = breakdowns;
     }
 
-    public Payment() {
+    public PaymentJson() {
     }
 
     public Integer getId() {
@@ -108,11 +100,11 @@ public class Payment {
         this.date = date;
     }
 
-    public Blob getImage() {
+    public byte[] getImage() {
         return image;
     }
 
-    public void setImage(Blob image) {
+    public void setImage(byte[] image) {
         this.image = image;
     }
 
@@ -138,5 +130,13 @@ public class Payment {
 
     public void setPayment_option(Integer payment_option) {
         this.payment_option = payment_option;
+    }
+
+    public ArrayList<Breakdown> getBreakdowns() {
+        return breakdowns;
+    }
+
+    public void setBreakdowns(ArrayList<Breakdown> breakdowns) {
+        this.breakdowns = breakdowns;
     }
 }

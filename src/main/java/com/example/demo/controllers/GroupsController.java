@@ -1,16 +1,13 @@
 package com.example.demo.controllers;
 
-import com.example.demo.RozrachunkiServerAppApplication;
 import com.example.demo.dao.GroupMembersRepository;
 import com.example.demo.dao.GroupsRepository;
 import com.example.demo.entity.Group;
 import com.example.demo.entity.GroupMember;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Optional;
 
 import com.example.demo.json.GroupJson;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.persistence.Column;
-import javax.persistence.Lob;
 import javax.sql.rowset.serial.SerialBlob;
 
 @RestController
@@ -61,23 +56,45 @@ public class GroupsController {
                     gr.setName(rs.getString("name"));
                     gr.setType(rs.getInt("type"));
                     gr.setSettled(rs.getBoolean("settled"));
-                    gr.setImage(rs.getBinaryStream("image").readAllBytes());
+
+                    gr.setImage(null);
+                    //gr.setImage(rs.getBinaryStream("image").readAllBytes());
 
                     groups.add(gr);
                 }
             }
+            rs.close();
         }
+
+        connection.close();
         
         return groups;
     }
     
-    @PostMapping(value="add")
-    public GroupJson add(@RequestBody GroupJson group) throws SQLException {
+    @PostMapping(value="add/{idUser}")
+    public GroupJson add(@RequestBody GroupJson group, @PathVariable Integer idUser) throws SQLException {
+
+        Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
 
         Blob blob = new SerialBlob(group.getImage());
 
-        groupsRepository.save(new Group(null, group.getName(), group.getType(), group.isSettled(), blob));
-        // od razu dodawac groupmembera - usera
+        PreparedStatement pre = connection.prepareStatement("insert into rozrachunki.groups values (NULL, ?, ?, ?, ?);");
+        pre.setString(1, group.getName());
+        pre.setInt(2, group.getType());
+        pre.setBoolean(3, group.isSettled());
+        pre.setBlob(4, blob);
+        int count = pre.executeUpdate();
+
+        if (count != 0)
+        {
+            Group g = groupsRepository.findMaxId();
+
+            pre.close();
+            connection.close();
+
+            groupMembersRepository.save(new GroupMember(null, idUser, g.getId()));
+        }
+
         return group;
     }
 }
