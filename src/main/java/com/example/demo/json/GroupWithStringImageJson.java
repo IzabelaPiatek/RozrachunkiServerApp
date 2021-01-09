@@ -2,15 +2,14 @@ package com.example.demo.json;
 
 import com.example.demo.entity.Group;
 
-public class GroupJson {
-
+public class GroupWithStringImageJson {
     private Integer id;
     private String name;
     private Integer type;
     private boolean settled;
-    private byte[] image = null;
+    private String image = null;
 
-    public GroupJson(Integer id, String name, Integer type, boolean settled, byte[] image) {
+    public GroupWithStringImageJson(Integer id, String name, Integer type, boolean settled, String image) {
         this.id = id;
         this.name = name;
         this.type = type;
@@ -18,7 +17,7 @@ public class GroupJson {
         this.image = image;
     }
 
-    public GroupJson(Group group) {
+    public GroupWithStringImageJson(Group group) {
         this.id = group.getId();
         this.name = group.getName();
         this.type = group.getType();
@@ -26,9 +25,7 @@ public class GroupJson {
         this.image = image;
     }
 
-    public GroupJson() {}
-
-    public void Group() { }
+    public GroupWithStringImageJson() {}
 
     public Integer getId() {
         return id;
@@ -62,11 +59,11 @@ public class GroupJson {
         this.settled = settled;
     }
 
-    public byte[] getImage() {
+    public String getImage() {
         return image;
     }
 
-    public void setImage(byte[] image) {
-            this.image = image;
-        }
+    public void setImage(String image) {
+        this.image = image;
+    }
 }

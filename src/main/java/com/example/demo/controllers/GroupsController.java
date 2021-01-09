@@ -8,8 +8,12 @@ import com.example.demo.entity.GroupMember;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Base64;
 
+import com.example.demo.entity.User;
 import com.example.demo.json.GroupJson;
+import com.example.demo.json.GroupWithStringImageJson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,8 +61,11 @@ public class GroupsController {
                     gr.setType(rs.getInt("type"));
                     gr.setSettled(rs.getBoolean("settled"));
 
-                    gr.setImage(null);
-                    //gr.setImage(rs.getBinaryStream("image").readAllBytes());
+                    if (rs.getBinaryStream("image") == null) {
+                        gr.setImage(null);
+                    } else {
+                        gr.setImage(rs.getBinaryStream("image").readAllBytes());
+                    }
 
                     groups.add(gr);
                 }
@@ -74,9 +81,14 @@ public class GroupsController {
     @PostMapping(value="add/{idUser}")
     public GroupJson add(@RequestBody GroupJson group, @PathVariable Integer idUser) throws SQLException {
 
+        Blob blob = null;
         Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
 
-        Blob blob = new SerialBlob(group.getImage());
+        if (group.getImage() != null)
+        {
+            blob = new SerialBlob(group.getImage());
+        }
+
 
         PreparedStatement pre = connection.prepareStatement("insert into rozrachunki.groups values (NULL, ?, ?, ?, ?);");
         pre.setString(1, group.getName());
@@ -96,5 +108,36 @@ public class GroupsController {
         }
 
         return group;
+    }
+
+    @GetMapping(value = "get/{idGroup}")
+    public GroupWithStringImageJson get(@PathVariable Integer idGroup) throws SQLException, IOException {
+
+        Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
+
+        PreparedStatement pre = connection.prepareStatement("select * from rozrachunki.groups where id_group = ?;");
+        pre.setInt(1, idGroup);
+        ResultSet rs = pre.executeQuery();
+        rs.next();
+        GroupWithStringImageJson gr = new GroupWithStringImageJson();
+        gr.setId(rs.getInt("id_group"));
+        gr.setName(rs.getString("name"));
+        gr.setType(rs.getInt("type"));
+        gr.setSettled(rs.getBoolean("settled"));
+
+        if (rs.getBinaryStream("image") == null) {
+            gr.setImage(null);
+        } else {
+            byte[] b = rs.getBinaryStream("image").readAllBytes();
+            //gr.setImage(b);
+            String base64String = Base64.getEncoder().encodeToString(b);
+
+            //byte[] backToBytes = Base64.getDecoder().decode(base64String);
+
+            gr.setImage(base64String);
+
+        }
+
+        return gr; //new ObjectMapper().writeValueAsString(gr);
     }
 }
