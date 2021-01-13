@@ -39,7 +39,7 @@ public class PaymentsController {
             blob = new SerialBlob(payment.getImage());
         }
 
-        Payment p = new Payment(null, payment.getIdGroup(), payment.getPaidBy(), payment.getAmount(), payment.getDescription(), payment.getDate(), blob, payment.getNote(), payment.isSettled(), payment.getPayment_option());
+        Payment p = new Payment(null, payment.getIdGroup(), payment.getPaidBy(), payment.getAmount(), payment.getDescription(), new java.sql.Date(payment.getDate().getTime()), blob, payment.getNote(), payment.isSettled(), payment.getPayment_option());
 
         paymentsRepository.save(p);
 

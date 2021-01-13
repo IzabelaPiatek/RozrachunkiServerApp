@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import javax.persistence.*;
 import java.sql.Blob;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -15,6 +16,7 @@ public class PaymentJson {
     private Integer paidBy;
     private Integer amount;
     private String description;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date date;
     private byte[] image = null;
     private String note;

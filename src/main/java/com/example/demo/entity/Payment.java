@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.sql.Blob;
+import java.time.LocalDate;
 import java.util.Date;
 import javax.persistence.*;
 
@@ -29,6 +30,8 @@ public class Payment {
     private String description;
     
     @Column(name = "date")
+    //@JsonFormat(pattern = "yyyy-MM-dd")
+    @Temporal(TemporalType.DATE)
     private Date date;
 
     @Column(name = "image", columnDefinition = "MEDIUMBLOB")
