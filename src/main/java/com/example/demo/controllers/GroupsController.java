@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Optional;
 
 import com.example.demo.entity.User;
 import com.example.demo.json.GroupJson;
@@ -16,12 +17,7 @@ import com.example.demo.json.GroupWithStringImageJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.sql.rowset.serial.SerialBlob;
 
@@ -30,10 +26,10 @@ import javax.sql.rowset.serial.SerialBlob;
 public class GroupsController {
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://localhost:3308/rozrachunki?useSSL=false&serverTimezone=UTC";
+    static final String DB_URL = "jdbc:mysql://localhost:3306/rozrachunki?useSSL=false&serverTimezone=UTC";
 
-    static final String USER = "admin";
-    static final String PASS = "admin";
+    static final String USER = "rozrachunki";
+    static final String PASS = "rozrachunki";
     
     @Autowired
     private GroupsRepository groupsRepository;
@@ -140,4 +136,55 @@ public class GroupsController {
 
         return gr; //new ObjectMapper().writeValueAsString(gr);
     }
+
+    @Transactional
+    @PostMapping(value = "delete/{idGroup}")
+    public int deleteGroup(@PathVariable Integer idGroup) throws SQLException {
+
+        Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
+
+        PreparedStatement pre = connection.prepareStatement("delete from rozrachunki.groups where id_group = ?;");
+        pre.setInt(1, idGroup);
+        int count = pre.executeUpdate();
+
+        return 1;
+
+    }
+
+    /*@RequestMapping(value = "updateGroup", method = RequestMethod.POST)
+    public int updateGroup(@RequestBody Group group) throws SQLException {
+
+        // Próba pierwsza
+        Group groupFromDb = null;
+        Optional<Group> u = groupsRepository.findById(group.getId());
+
+        if (u != null)
+        {
+            groupFromDb  = u.get();
+        }
+        //if (!userFromDb.getUsername().equals(user.getUsername()))
+        if (!groupFromDb.getName().equals(group.getName()))
+        {
+            //if (userRepository.findByUsername(user.getUsername()) != null)
+            if (groupsRepository.findByName(group.getName()) != null)
+                return -1;
+        }
+        if (!groupFromDb.getType().equals(group.getName()))
+        {
+            if (groupsRepository.findByType(group.getType()) != null)
+                return 1;
+        }
+        if (!groupFromDb.getImage().equals(group.getImage()))
+        {
+                return 1;
+        }
+        if (groupFromDb.isSettled())
+        {
+            return 1;
+        }
+        groupsRepository.save(group);
+        return group.getId();
+
+
+    }*/
 }

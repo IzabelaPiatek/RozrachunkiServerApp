@@ -31,4 +31,8 @@ public interface GroupsRepository extends JpaRepository<Group, Integer> {
 
     @Query(value="select * from rozrachunki.groups order by id_group desc limit 1", nativeQuery = true)
     Group findMaxId();
+
+    public User findByName(String name);
+
+    public User findByType(Integer type);
 }
