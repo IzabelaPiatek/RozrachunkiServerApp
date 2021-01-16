@@ -1,5 +1,6 @@
 package com.example.demo.controllers;
 
+import com.example.demo.RozrachunkiServerAppApplication;
 import com.example.demo.dao.GroupMembersRepository;
 import com.example.demo.dao.GroupsRepository;
 import com.example.demo.entity.Group;
@@ -25,11 +26,11 @@ import javax.sql.rowset.serial.SerialBlob;
 @RequestMapping("groups")
 public class GroupsController {
 
-    static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://localhost:3306/rozrachunki?useSSL=false&serverTimezone=UTC";
+    /*static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+    static final String DB_URL = "jdbc:mysql://localhost:3308/rozrachunki?useSSL=false&serverTimezone=UTC";
 
-    static final String USER = "rozrachunki";
-    static final String PASS = "rozrachunki";
+    static final String USER = "admin";
+    static final String PASS = "admin";*/
     
     @Autowired
     private GroupsRepository groupsRepository;
@@ -41,7 +42,7 @@ public class GroupsController {
     @GetMapping(value = "getUserGroups/{idUser}")
     public ArrayList<GroupJson> getUserGroups(@PathVariable Integer idUser) throws SQLException, IOException {
 
-        Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
+        Connection connection = DriverManager.getConnection(RozrachunkiServerAppApplication.DB_URL, RozrachunkiServerAppApplication.USER, RozrachunkiServerAppApplication.PASS);
 
         ArrayList<GroupMember> groupsMember = groupMembersRepository.findByIdUser(idUser);
         ArrayList<GroupJson> groups = new ArrayList<>();
@@ -68,7 +69,6 @@ public class GroupsController {
             }
             rs.close();
         }
-
         connection.close();
         
         return groups;
@@ -78,13 +78,12 @@ public class GroupsController {
     public GroupJson add(@RequestBody GroupJson group, @PathVariable Integer idUser) throws SQLException {
 
         Blob blob = null;
-        Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
+        Connection connection = DriverManager.getConnection(RozrachunkiServerAppApplication.DB_URL, RozrachunkiServerAppApplication.USER, RozrachunkiServerAppApplication.PASS);
 
         if (group.getImage() != null)
         {
             blob = new SerialBlob(group.getImage());
         }
-
 
         PreparedStatement pre = connection.prepareStatement("insert into rozrachunki.groups values (NULL, ?, ?, ?, ?);");
         pre.setString(1, group.getName());
@@ -102,14 +101,13 @@ public class GroupsController {
 
             groupMembersRepository.save(new GroupMember(null, idUser, g.getId()));
         }
-
         return group;
     }
 
     @GetMapping(value = "get/{idGroup}")
     public GroupWithStringImageJson get(@PathVariable Integer idGroup) throws SQLException, IOException {
 
-        Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
+        Connection connection = DriverManager.getConnection(RozrachunkiServerAppApplication.DB_URL, RozrachunkiServerAppApplication.USER, RozrachunkiServerAppApplication.PASS);
 
         PreparedStatement pre = connection.prepareStatement("select * from rozrachunki.groups where id_group = ?;");
         pre.setInt(1, idGroup);
@@ -131,8 +129,10 @@ public class GroupsController {
             //byte[] backToBytes = Base64.getDecoder().decode(base64String);
 
             gr.setImage(base64String);
-
         }
+
+        pre.close();
+        connection.close();
 
         return gr; //new ObjectMapper().writeValueAsString(gr);
     }
@@ -141,50 +141,33 @@ public class GroupsController {
     @PostMapping(value = "delete/{idGroup}")
     public int deleteGroup(@PathVariable Integer idGroup) throws SQLException {
 
-        Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
+        Connection connection = DriverManager.getConnection(RozrachunkiServerAppApplication.DB_URL, RozrachunkiServerAppApplication.USER, RozrachunkiServerAppApplication.PASS);
 
         PreparedStatement pre = connection.prepareStatement("delete from rozrachunki.groups where id_group = ?;");
         pre.setInt(1, idGroup);
         int count = pre.executeUpdate();
 
-        return 1;
+        pre.close();
+        connection.close();
 
+        return 1;
     }
 
-    /*@RequestMapping(value = "updateGroup", method = RequestMethod.POST)
-    public int updateGroup(@RequestBody Group group) throws SQLException {
+    @RequestMapping(value = "updateGroup", method = RequestMethod.POST)
+    public int updateGroup(@RequestBody GroupJson group) throws SQLException {
 
-        // Próba pierwsza
-        Group groupFromDb = null;
-        Optional<Group> u = groupsRepository.findById(group.getId());
+        Connection connection = DriverManager.getConnection(RozrachunkiServerAppApplication.DB_URL, RozrachunkiServerAppApplication.USER, RozrachunkiServerAppApplication.PASS);
 
-        if (u != null)
-        {
-            groupFromDb  = u.get();
-        }
-        //if (!userFromDb.getUsername().equals(user.getUsername()))
-        if (!groupFromDb.getName().equals(group.getName()))
-        {
-            //if (userRepository.findByUsername(user.getUsername()) != null)
-            if (groupsRepository.findByName(group.getName()) != null)
-                return -1;
-        }
-        if (!groupFromDb.getType().equals(group.getName()))
-        {
-            if (groupsRepository.findByType(group.getType()) != null)
-                return 1;
-        }
-        if (!groupFromDb.getImage().equals(group.getImage()))
-        {
-                return 1;
-        }
-        if (groupFromDb.isSettled())
-        {
-            return 1;
-        }
-        groupsRepository.save(group);
-        return group.getId();
+        PreparedStatement pre = connection.prepareStatement("update rozrachunki.groups set name = ?, type = ?, settled = ? where id_group = ?;");
+        pre.setString(1, group.getName());
+        pre.setInt(2, group.getType());
+        pre.setBoolean(3, group.isSettled());
+        pre.setInt(4, group.getId());
+        int count = pre.executeUpdate();
 
+        pre.close();
+        connection.close();
 
-    }*/
+        return 0;
+    }
 }

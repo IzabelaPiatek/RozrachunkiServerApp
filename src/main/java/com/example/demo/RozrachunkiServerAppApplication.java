@@ -12,13 +12,11 @@ import java.sql.*;
 
 public class RozrachunkiServerAppApplication {
 
-    static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://localhost:3308/rozrachunki?useSSL=false&serverTimezone=UTC";
+    public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+    public static final String DB_URL = "jdbc:mysql://localhost:3308/rozrachunki?useSSL=false&serverTimezone=UTC";
 
-    static final String USER = "admin";
-    static final String PASS = "admin";
-
-    public static Connection connection = null;
+    public static final String USER = "admin";
+    public static final String PASS = "admin";
 
     public static void main(String[] args) {
 
