@@ -58,11 +58,12 @@ public class GroupsController {
                     gr.setType(rs.getInt("type"));
                     gr.setSettled(rs.getBoolean("settled"));
 
-                    if (rs.getBinaryStream("image") == null) {
+                    /*if (rs.getBinaryStream("image") == null) {
                         gr.setImage(null);
                     } else {
                         gr.setImage(rs.getBinaryStream("image").readAllBytes());
-                    }
+                    }*/
+                    gr.setImage(null);
 
                     groups.add(gr);
                 }

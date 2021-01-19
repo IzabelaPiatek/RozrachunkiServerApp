@@ -7,5 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface PaymentsRepository extends JpaRepository<Payment, Integer> {
 
     public ArrayList<Payment> findByPaidByAndSettled(Integer idUser, boolean b);
-    
+
+    ArrayList<Payment> findByIdGroup(Integer idGroup);
+
+    ArrayList<Payment> findByIdGroupAndSettled(Integer idGroup, boolean b);
 }

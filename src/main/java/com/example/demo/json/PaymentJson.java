@@ -1,10 +1,12 @@
 package com.example.demo.json;
 
 import com.example.demo.entity.Breakdown;
+import com.example.demo.entity.Payment;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import javax.persistence.*;
 import java.sql.Blob;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -48,7 +50,24 @@ public class PaymentJson {
         this.note = note;
         this.settled = settled;
         this.payment_option = payment_option;
-        this.breakdowns = breakdowns;
+    }
+
+    public PaymentJson(Payment payment) throws SQLException {
+        this.id = payment.getId();
+        this.idGroup = payment.getIdGroup();
+        this.paidBy = payment.getPaidBy();
+        this.amount = payment.getAmount();
+        this.description = payment.getDescription();
+        this.date = payment.getDate();
+        if (payment.getImage() != null) {
+            this.image = payment.getImage().getBytes(1, (int)payment.getImage().length());
+        } else {
+            this.image = null;
+        }
+
+        this.note = payment.getNote();
+        this.settled = payment.isSettled();
+        this.payment_option = payment.getPayment_option();
     }
 
     public PaymentJson() {

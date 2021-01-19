@@ -7,6 +7,7 @@ import com.example.demo.entity.Breakdown;
 import com.example.demo.entity.GroupMember;
 import com.example.demo.entity.Payment;
 import com.example.demo.entity.User;
+import com.example.demo.json.FriendJson;
 import com.example.demo.json.GroupJson;
 import com.example.demo.json.PaymentJson;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,5 +53,18 @@ public class PaymentsController {
 
         return payment;
     }
-    
+
+    @GetMapping(value = "getAllForGroup/{idGroup}")
+    public ArrayList<PaymentJson> getAllForGroup(@PathVariable Integer idGroup) throws SQLException {
+
+        ArrayList<Payment> list = paymentsRepository.findByIdGroupAndSettled(idGroup, false);
+        ArrayList<PaymentJson> payments = new ArrayList<>();
+
+        for (Payment payment: list) {
+            payment.setImage(null);
+            payments.add(new PaymentJson(payment));
+        }
+
+        return payments;
+    }
 }
