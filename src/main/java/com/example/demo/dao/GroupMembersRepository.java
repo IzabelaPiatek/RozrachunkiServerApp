@@ -11,4 +11,6 @@ public interface GroupMembersRepository extends JpaRepository<GroupMember, Integ
     public ArrayList<GroupMember> findByIdUser(Integer idUser);
 
     public ArrayList<GroupMember> findByIdGroup(Integer idGroup);
+
+    public GroupMember findByIdGroupAndIdUser(Integer idGroup, Integer userId);
 }

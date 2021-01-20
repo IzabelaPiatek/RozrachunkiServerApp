@@ -1,8 +1,10 @@
 package com.example.demo.controllers;
 
+import com.example.demo.RozrachunkiServerAppApplication;
 import com.example.demo.dao.BreakdownsRepository;
 import com.example.demo.dao.GroupMembersRepository;
 import com.example.demo.dao.PaymentsRepository;
+import com.example.demo.dao.UsersRepository;
 import com.example.demo.entity.Breakdown;
 import com.example.demo.entity.GroupMember;
 import com.example.demo.entity.Payment;
@@ -10,12 +12,13 @@ import com.example.demo.entity.User;
 import com.example.demo.json.FriendJson;
 import com.example.demo.json.GroupJson;
 import com.example.demo.json.PaymentJson;
+import com.example.demo.json.PaymentWithOwnerJson;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.sql.rowset.serial.SerialBlob;
-import java.sql.Blob;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 
 @RestController
@@ -30,6 +33,9 @@ public class PaymentsController {
 
     @Autowired
     private GroupMembersRepository groupMembersRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
 
     @PostMapping(value="add")
     public PaymentJson add(@RequestBody PaymentJson payment) throws SQLException {
@@ -66,5 +72,23 @@ public class PaymentsController {
         }
 
         return payments;
+    }
+
+    @GetMapping(value = "get/{id}")
+    public PaymentWithOwnerJson get(@PathVariable Integer id) throws SQLException {
+
+        Payment payment = paymentsRepository.findById(id).get();
+        String username = usersRepository.findById(payment.getPaidBy()).get().getUsername();
+
+        return new PaymentWithOwnerJson(payment, username);
+    }
+
+    @Transactional
+    @PostMapping(value = "delete/{id}")
+    public int delete(@PathVariable Integer id) throws SQLException {
+
+        paymentsRepository.delete(paymentsRepository.findById(id).get());
+
+        return 1;
     }
 }
