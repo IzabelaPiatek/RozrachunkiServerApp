@@ -5,14 +5,8 @@ import com.example.demo.dao.BreakdownsRepository;
 import com.example.demo.dao.GroupMembersRepository;
 import com.example.demo.dao.PaymentsRepository;
 import com.example.demo.dao.UsersRepository;
-import com.example.demo.entity.Breakdown;
-import com.example.demo.entity.GroupMember;
-import com.example.demo.entity.Payment;
-import com.example.demo.entity.User;
-import com.example.demo.json.FriendJson;
-import com.example.demo.json.GroupJson;
-import com.example.demo.json.PaymentJson;
-import com.example.demo.json.PaymentWithOwnerJson;
+import com.example.demo.entity.*;
+import com.example.demo.json.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.sql.rowset.serial.SerialBlob;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("payments")
@@ -90,5 +85,28 @@ public class PaymentsController {
         paymentsRepository.delete(paymentsRepository.findById(id).get());
 
         return 1;
+    }
+
+    @GetMapping(value = "getBorrowers/{idPayment}")
+    public ArrayList<BorrowerJson> getBorrowers(@PathVariable Integer idPayment) {
+        ArrayList<BorrowerJson> borrowers = new ArrayList<>();
+
+        Payment payment = paymentsRepository.findById(idPayment).get();
+        ArrayList<Breakdown> breakdowns = breakdownsRepository.findByIdPayment(idPayment);
+
+        for (Breakdown breakdown : breakdowns) {
+
+            if (breakdown.getIdBorrower().equals(payment.getPaidBy())) {
+                borrowers.add(new BorrowerJson(breakdown.getIdBorrower(),
+                        usersRepository.findById(breakdown.getIdBorrower()).get().getUsername(),
+                        payment.getAmount(), breakdown.getAmount(), breakdown.isSettled()));
+            } else {
+                borrowers.add(new BorrowerJson(breakdown.getIdBorrower(),
+                        usersRepository.findById(breakdown.getIdBorrower()).get().getUsername(),
+                        0, breakdown.getAmount(), breakdown.isSettled()));
+            }
+        }
+
+        return borrowers;
     }
 }
